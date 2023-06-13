@@ -1,0 +1,43 @@
+
+GET http://localhost:5000/
+
+###
+
+GET http://localhost:5000/users
+
+###
+
+POST http://localhost:5000/users
+Content-Type: application/json
+
+{
+    "firstName": "omar",
+    "email": "omar@gmail.com",
+    "password": "1234"
+}
+
+###
+
+POST http://localhost:5000/usersLogin
+Content-Type: application/json
+
+{
+    "email": "omar@gmail.com",
+    "password": "1234"
+}
+
+###
+
+PUT http://localhost:5000/users/64887e8cfab1b171101228ee
+Content-Type: application/json
+
+{
+    "firstName": "ahmad",
+    "email": "omar@gmail.com",
+    "password": "1234"
+}
+
+###
+
+DELETE http://localhost:5000/users/64887e8cfab1b171101228ee
+Content-Type: application/json
