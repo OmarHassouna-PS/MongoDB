@@ -1,9 +1,60 @@
-// 1- calling the model
 const User = require("../models/user");
 const bcrypt = require('bcrypt');
 const jwt = require("jsonwebtoken");
-const secretKey = "ZhQrZ951";
+const errorHandler = require("../middleware/500");
 
+const createToken = (req, res) => {
+  const accessToken = jwt.sign(
+    JSON.parse(JSON.stringify(req.body)),
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: "1w" }
+  );
+  res.json(accessToken)
+}
+
+const Login = async (req, res, next) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email: email });
+
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+
+      res.status(401).send("incorrect email or password");
+    }
+  } catch (error) {
+    errorHandler(error, req, res);
+  }
+
+  req.body = user;
+  next();
+};
+
+const SignUp = async (req, res, next) => {
+  const { username, email, password } = req.body;
+
+  User.find()
+    .then((data) => {
+      data.map((user) => {
+        if (user.email === email) return res.json("Email already taken.");
+      });
+    })
+    .catch((error) => {
+      errorHandler(error, req, res);
+    });
+
+  const hashedPwd = await bcrypt.hash(password, 10);
+  const newUser = new User({
+    username: username,
+    email: email,
+    password: hashedPwd,
+  });
+
+  const user = await newUser.save();
+
+  req.body = user;
+  next();
+};
 
 const allUsers = (req, res) => {
   User.find()
@@ -19,11 +70,8 @@ const allUsers = (req, res) => {
 const oneUser = async (req, res) => {
   const id = req.params.id;
   const user = await User.find({ _id: id });
-  console.log(user);
   res.json(user);
 };
-
-
 
 const newUser = async (req, res) => {
 
@@ -39,25 +87,6 @@ const newUser = async (req, res) => {
   const addUser = await user.save();
   res.json([addUser, token]);
 };
-
-
-const newUserLogin = async (req, res) => {
-
-  const { email, password } = req.body;
-  const user = await User.find({ email: email });
-  // password check
-  const validpassword = await bcrypt.compare(
-    password,
-    user[0].password
-  );
-  if (!validpassword) {
-    return res.json({ error: "incorrect password" });
-  }
-  if (validpassword) {
-    res.json(user);
-  }
-};
-
 
 const updateUser = async (req, res) => {
   const userId = req.params.id;
@@ -80,5 +109,7 @@ module.exports = {
   oneUser,
   updateUser,
   deleteUser,
-  newUserLogin,
+  Login,
+  SignUp,
+  createToken,
 }; 
